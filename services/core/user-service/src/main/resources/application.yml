@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: user-service
+
+  cloud:
+    discovery:
+      enabled: true
+
+  profiles:
+    active: test
+
+server:
+  port: 4007
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+

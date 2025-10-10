@@ -1,0 +1,438 @@
+###
+# Authentication Flow Test Suite
+# This file demonstrates the complete authentication flow for the microservice project
+# 
+# Flow Overview:
+# 1. Register a new user
+# 2. Login to get access and refresh tokens
+# 3. Access protected resources using the access token
+# 4. Refresh the access token using refresh token
+# 5. Logout to invalidate tokens
+# 6. Test unauthorized access
+###
+
+# Base URLs
+@gateway-url = http://localhost:4000
+@auth-service-url = http://localhost:4005
+@user-service-url = http://localhost:4007
+
+# Variables to store tokens (will be set manually after each request)
+@access-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsInVzZXJJZCI6NCwiZW1haWwiOiJqb2huLmRvZUBleGFtcGxlLmNvbSIsInVzZXJuYW1lIjoiam9obmRvZSIsInN1YiI6ImpvaG5kb2UiLCJleHAiOjE3NjAwNjM2MzV9.NsPUP83WQMrbAabqbOhWX1CVjbiyyvUor05BAti2QrM
+@refresh-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsInRva2VuVHlwZSI6InJlZnJlc2giLCJ1c2VySWQiOjQsImVtYWlsIjoiam9obi5kb2VAZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6ImpvaG5kb2UiLCJzdWIiOiJqb2huZG9lIiwiZXhwIjoxNzYwMTQ2NDM1fQ.TYbBeKbOp2mDT8RF1wi4ywxP_r_pm55h5PC5nVc-sZ0
+
+###
+# 1. USER REGISTRATION
+# Create a new user account
+###
+POST {{gateway-url}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "email": "john.doe@example.com", 
+  "password": "password123"
+}
+
+###
+# Expected Response: 200 OK
+# {
+#   "status": 200,
+#   "message": "Success",
+#   "data": "User registered successfully",
+#   "timestamp": "2025-01-10T..."
+# }
+###
+
+###
+# 2. USER LOGIN
+# Authenticate user and receive JWT tokens
+###
+POST {{gateway-url}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "password": "password123"
+}
+
+###
+# Expected Response: 200 OK
+# {
+#   "status": 200,
+#   "message": "Success",
+#   "data": {
+#     "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+#     "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
+#     "tokenType": "Bearer",
+#     "expiresIn": 3600,
+#     "refreshExpiresIn": 86400,
+#     "user": {
+#       "id": 1,
+#       "username": "johndoe",
+#       "email": "john.doe@example.com",
+#       "role": "USER"
+#     }
+#   },
+#   "timestamp": "2025-01-10T..."
+# }
+#
+# ⚠️ IMPORTANT: Copy the accessToken and refreshToken from the response
+# and paste them into the variables at the top of this file:
+# @access-token = your-access-token-here
+# @refresh-token = your-refresh-token-here
+###
+
+###
+# 3. VALIDATE TOKEN
+# Check if the access token is valid
+###
+POST {{gateway-url}}/api/auth/validate
+Authorization: Bearer {{access-token}}
+Content-Type: application/json
+
+###
+# Expected Response: 200 OK
+# {
+#   "status": 200,
+#   "message": "Success", 
+#   "data": "Token is valid",
+#   "timestamp": "2025-01-10T..."
+# }
+###
+
+###
+# 4. ACCESS PROTECTED USER ENDPOINT - Get All Users (ADMIN only)
+# This should fail for regular users
+###
+GET {{gateway-url}}/api/users
+Authorization: Bearer {{access-token}}
+
+###
+# Expected Response: 403 Forbidden (if user is not ADMIN)
+# The gateway will add X-User-* headers and the user-service will check permissions
+###
+
+###
+# 5. ACCESS PROTECTED USER ENDPOINT - Get Admin Stats (ADMIN only) 
+# This demonstrates role-based access control
+###
+GET {{gateway-url}}/api/users/admin/stats
+Authorization: Bearer {{access-token}}
+
+###
+# Expected Response: 403 Forbidden (if user is not ADMIN)
+# {
+#   "status": 403,
+#   "message": "Forbidden",
+#   "data": "Access denied: ADMIN role required",
+#   "timestamp": "2025-01-10T..."
+# }
+###
+
+###
+# 6. REFRESH TOKEN
+# Get a new access token using the refresh token
+###
+POST {{gateway-url}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refresh-token}}"
+}
+
+###
+# Expected Response: 200 OK
+# {
+#   "status": 200,
+#   "message": "Success",
+#   "data": {
+#     "accessToken": "new-access-token...",
+#     "refreshToken": "new-refresh-token...",
+#     "tokenType": "Bearer",
+#     "expiresIn": 3600,
+#     "refreshExpiresIn": 86400,
+#     "user": { ... }
+#   },
+#   "timestamp": "2025-01-10T..."
+# }
+#
+# ⚠️ Update the @access-token variable with the new token
+###
+
+###
+# 7. LOGOUT
+# Invalidate the current access token
+###
+POST {{gateway-url}}/api/auth/logout
+Authorization: Bearer {{access-token}}
+Content-Type: application/json
+
+###
+# Expected Response: 200 OK
+# {
+#   "status": 200,
+#   "message": "Success",
+#   "data": "Logged out successfully", 
+#   "timestamp": "2025-01-10T..."
+# }
+###
+
+###
+# 8. TEST UNAUTHORIZED ACCESS
+# Try to access protected endpoint after logout
+###
+GET {{gateway-url}}/api/users
+Authorization: Bearer {{access-token}}
+
+###
+# Expected Response: 401 Unauthorized
+# The gateway will reject the request because the token has been invalidated
+###
+
+###
+# 9. TEST INVALID TOKEN
+# Try to access with an invalid token
+###
+GET {{gateway-url}}/api/users
+Authorization: Bearer invalid-token-here
+
+###
+# Expected Response: 401 Unauthorized
+###
+
+###
+# 10. TEST NO TOKEN
+# Try to access protected endpoint without token
+###
+GET {{gateway-url}}/api/users
+
+###
+# Expected Response: 401 Unauthorized
+###
+
+###
+# ADDITIONAL TEST SCENARIOS
+###
+
+###
+# 11. REGISTER WITH DUPLICATE USERNAME
+###
+POST {{gateway-url}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "email": "another.email@example.com",
+  "password": "password123"
+}
+
+###
+# Expected Response: 400 Bad Request
+# {
+#   "status": 400,
+#   "message": "Bad Request",
+#   "reason": "Registration failed: Username already exists",
+#   "timestamp": "2025-01-10T..."
+# }
+###
+
+###
+# 12. REGISTER WITH DUPLICATE EMAIL
+###
+POST {{gateway-url}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "janedoe", 
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+
+###
+# Expected Response: 400 Bad Request
+###
+
+###
+# 13. LOGIN WITH INVALID CREDENTIALS
+###
+POST {{gateway-url}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "wrongpassword"
+}
+
+###
+# Expected Response: 500 Internal Server Error with "Authentication failed: Invalid credentials"
+###
+
+###
+# 13b. LOGIN WITH CORRECT CREDENTIALS FOR EXISTING USER
+###
+POST {{gateway-url}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "password123"
+}
+
+###
+# Expected Response: 200 OK with tokens
+###
+
+###
+# 14. REFRESH WITH INVALID TOKEN
+###
+POST {{gateway-url}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "invalid-refresh-token"
+}
+
+###
+# Expected Response: 401 Unauthorized
+###
+
+###
+# TESTING DIFFERENT SERVICES THROUGH GATEWAY
+###
+
+###
+# 15. TEST USER SERVICE INTERNAL ENDPOINTS (should work without JWT)
+# These are internal endpoints used by Feign clients
+###
+GET {{gateway-url}}/api/users/username/johndoe
+
+###
+# Expected Response: 200 OK with user data
+###
+
+###
+# 16. CREATE ADMIN USER FOR TESTING (Direct to User Service)
+# Note: This bypasses authentication - for testing only
+###
+POST {{user-service-url}}/api/users/create
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "email": "admin@example.com",
+  "role": "ADMIN"
+}
+
+###
+# Now register the admin user through auth service
+###
+POST {{gateway-url}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "email": "admin@example.com",
+  "password": "admin123"
+}
+
+###
+# Login as admin to get admin token
+###
+POST {{gateway-url}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin", 
+  "password": "admin123"
+}
+
+###
+# Test admin access with admin token
+# ⚠️ Replace with actual admin token
+###
+@admin-token = your-admin-token-here
+
+GET {{gateway-url}}/api/users/admin/stats
+Authorization: Bearer {{admin-token}}
+
+###
+# Expected Response: 200 OK with admin stats
+###
+
+###
+# PERFORMANCE AND LOAD TESTING
+###
+
+###
+# 17. MULTIPLE LOGIN ATTEMPTS (Rate Limiting Test)
+# The gateway has rate limiting configured
+###
+POST {{gateway-url}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "password": "password123"
+}
+
+###
+# Repeat this request multiple times quickly to test rate limiting
+###
+
+###
+# 18. TOKEN VALIDATION PERFORMANCE TEST
+###
+GET {{gateway-url}}/api/users/username/johndoe
+Authorization: Bearer {{access-token}}
+
+###
+# This tests the JWT validation performance in the gateway filter
+###
+
+###
+# TROUBLESHOOTING SECTION
+###
+
+###
+# 19. CHECK SERVICE HEALTH
+###
+GET {{gateway-url}}/actuator/health
+
+###
+# 20. CHECK GATEWAY ROUTES
+###
+GET {{gateway-url}}/actuator/gateway/routes
+
+###
+# 21. DIRECT SERVICE ACCESS (Bypass Gateway)
+# For debugging - access services directly
+###
+GET {{auth-service-url}}/api/auth/validate
+Authorization: Bearer {{access-token}}
+
+GET {{user-service-url}}/api/users/username/johndoe
+
+###
+# NOTES:
+# 1. Make sure all services are running:
+#    - Discovery Server (port 8761)
+#    - Gateway Server (port 4000) 
+#    - Auth Server (port 4005)
+#    - User Service (port 4007)
+#
+# 2. The gateway handles JWT validation for all protected routes
+# 3. Auth service only handles token generation and refresh
+# 4. User service receives user info via headers from gateway
+# 5. All requests should go through the gateway in production
+#
+# 6. Token Flow:
+#    Login -> Auth Service generates JWT -> Gateway validates JWT -> User Service gets user info from headers
+#
+# 7. Security Features:
+#    - JWT tokens with expiration
+#    - Refresh token mechanism  
+#    - Role-based access control
+#    - Token blacklisting on logout
+#    - Rate limiting in gateway
+#    - CORS configuration
+###
