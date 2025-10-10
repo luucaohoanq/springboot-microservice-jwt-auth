@@ -1,0 +1,63 @@
+<configuration scan="true" scanPeriod="30 seconds">
+  <!-- Hiển thị lỗi cấu hình Logback ra console -->
+  <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+
+  <!-- Folder log trong service hiện tại -->
+  <property name="LOG_HOME" value="./logs" />
+  <property name="MAX_LOG_FILE_SIZE" value="10MB" />
+  <property name="MAX_LOG_HISTORY" value="30" />
+
+  <!-- Ghi log ra console -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>
+        %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{36}) - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+
+  <!-- Ghi log thông thường (debug/info) ra file -->
+  <appender name="FILE-AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/${spring.application.name}.log</file>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- rollover mỗi ngày -->
+      <fileNamePattern>${LOG_HOME}/archived/${spring.application.name}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+        <maxFileSize>${MAX_LOG_FILE_SIZE}</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <maxHistory>${MAX_LOG_HISTORY}</maxHistory>
+    </rollingPolicy>
+  </appender>
+
+  <!-- Ghi log lỗi riêng -->
+  <appender name="FILE-ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_HOME}/${spring.application.name}-error.log</file>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_HOME}/archived/${spring.application.name}-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+        <maxFileSize>${MAX_LOG_FILE_SIZE}</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <maxHistory>${MAX_LOG_HISTORY}</maxHistory>
+    </rollingPolicy>
+  </appender>
+
+  <!-- Log riêng cho package chính -->
+  <logger name="com.lcaohoanq" level="debug" additivity="false">
+    <appender-ref ref="FILE-AUDIT" />
+    <appender-ref ref="CONSOLE" />
+  </logger>
+
+  <!-- Root logger cho tất cả -->
+  <root level="info">
+    <appender-ref ref="CONSOLE" />
+    <appender-ref ref="FILE-ERROR" />
+  </root>
+</configuration>

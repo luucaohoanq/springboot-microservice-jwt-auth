@@ -3,7 +3,6 @@ package com.lcaohoanq.authserver.controller;
 import com.lcaohoanq.authserver.services.AuthService;
 import com.lcaohoanq.authserver.domain.token.TokenService;
 import com.lcaohoanq.authserver.feign.UserFeign;
-import com.lcaohoanq.commonlibrary.apis.ApiResponse;
 import com.lcaohoanq.commonlibrary.apis.MyApiResponse;
 import com.lcaohoanq.commonlibrary.dto.LoginRequest;
 import com.lcaohoanq.commonlibrary.dto.LoginResponse;

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <title>Developer API Portal</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #0b1220;
+      --text-primary: #e6eef8;
+      --text-secondary: rgba(230, 238, 248, 0.7);
+      --border-color: rgba(255, 255, 255, 0.03);
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --shadow: rgba(2, 6, 23, 0.6);
+      --overlay-bg: rgba(2, 6, 23, 0.8);
+      --loading-bg: rgba(0, 0, 0, 0.2);
+      --spinner-track: rgba(159, 183, 255, 0.08);
+    }
+
+    body.light-mode {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --card-bg: rgba(0, 0, 0, 0.02);
+      --shadow: rgba(0, 0, 0, 0.1);
+      --overlay-bg: rgba(15, 23, 42, 0.75);
+      --loading-bg: rgba(0, 0, 0, 0.05);
+      --spinner-track: rgba(102, 126, 234, 0.15);
+    }
+
+    body {
+      font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 60%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      color: var(--text-primary);
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    header {
+      background: linear-gradient(
+          90deg,
+          var(--card-bg),
+          rgba(255, 255, 255, 0.02)
+      );
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+    }
+    h1 {
+      font-size: 1.125rem;
+      color: var(--text-primary);
+    }
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+    .btn-ghost:hover {
+      background: var(--card-bg);
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle:hover {
+      background: var(--card-bg);
+      transform: scale(1.05);
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      padding: 1.25rem;
+    }
+
+    .iframe-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      background: var(--bg-primary);
+      margin: 1rem 0;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px var(--shadow);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border-color);
+    }
+    .iframe-container iframe {
+      flex: 1 1 auto;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 0.5rem;
+      background: linear-gradient(
+          180deg,
+          var(--card-bg),
+          var(--loading-bg)
+      );
+      color: var(--text-secondary);
+    }
+    .spinner {
+      border: 4px solid var(--spinner-track);
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--overlay-bg);
+      backdrop-filter: blur(8px);
+      z-index: 1200;
+    }
+    .login-panel {
+      width: 360px;
+      max-width: calc(100% - 32px);
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 8px 30px var(--shadow);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+    .login-panel h2 {
+      margin-bottom: 0.25rem;
+      font-size: 1.1rem;
+    }
+    .login-panel p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    .form-row {
+      margin-bottom: 0.75rem;
+    }
+    .form-row input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: border-color 0.2s ease;
+    }
+    .form-row input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .form-row label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .login-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--bg-secondary);
+      padding: 12px 16px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px var(--shadow);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      transform: translateX(300px);
+      transition: transform 0.35s ease;
+      z-index: 1300;
+    }
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    footer {
+      text-align: center;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 700px) {
+      .login-panel {
+        width: 92%;
+      }
+      .brand h1 {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">API</div>
+    <div>
+      <h1>Developer API Portal</h1>
+      <div class="subtitle">Secure access to internal API docs</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button
+        class="theme-toggle"
+        id="themeToggle"
+        onclick="toggleTheme()"
+        title="Toggle theme"
+    >
+      🌙
+    </button>
+    <button
+        id="logoutBtn"
+        class="btn btn-ghost"
+        style="display: none"
+        onclick="logout()"
+    >
+      Logout
+    </button>
+    <button class="btn btn-primary" id="refreshBtn" onclick="refreshDocs()">
+      Refresh Docs
+    </button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="iframe-container" id="iframeContainer">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div id="loadingText">Loading documentation...</div>
+    </div>
+    <iframe
+        id="apiFrame"
+        data-src="/swagger-ui/index.html"
+        aria-hidden="true"
+    ></iframe>
+  </div>
+  <footer>
+    Portal built for developers — limited access. Contact admin for changes.
+  </footer>
+</main>
+
+<div class="login-overlay" id="loginOverlay" aria-hidden="false">
+  <div class="login-panel" role="dialog" aria-labelledby="loginTitle">
+    <h2 id="loginTitle">Sign in to Developer Portal</h2>
+    <p>
+      Enter your credentials to access API docs. Default account:
+      <strong>admin</strong> / <strong>admin</strong>
+    </p>
+    <div class="form-row">
+      <label for="username">Username</label>
+      <input
+          id="username"
+          type="text"
+          value="admin"
+          autocomplete="username"
+      />
+    </div>
+    <div class="form-row">
+      <label for="password">Password</label>
+      <input
+          id="password"
+          type="password"
+          value="admin"
+          autocomplete="current-password"
+      />
+    </div>
+    <div class="login-actions">
+      <div style="display: flex; gap: 8px; align-items: center">
+        <input id="remember" type="checkbox" />
+        <label
+            for="remember"
+            style="font-size: 0.85rem; color: var(--text-secondary)"
+        >Remember</label
+        >
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button class="btn btn-ghost" onclick="showDefaultCreds()">
+          Show Default
+        </button>
+        <button class="btn btn-primary" onclick="attemptLogin()">
+          Sign in
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notification" id="notification"><div id="notifText"></div></div>
+
+<script>
+  const iframe = document.getElementById("apiFrame");
+  const loading = document.getElementById("loading");
+  const loginOverlay = document.getElementById("loginOverlay");
+  const notification = document.getElementById("notification");
+  const notifText = document.getElementById("notifText");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const themeToggle = document.getElementById("themeToggle");
+
+  const DEFAULT_USER = "admin";
+  const DEFAULT_PASS = "admin";
+
+  function showNotification(message) {
+    notifText.textContent = message;
+    notification.classList.add("show");
+    setTimeout(() => notification.classList.remove("show"), 3000);
+  }
+
+  function showDefaultCreds() {
+    document.getElementById("username").value = DEFAULT_USER;
+    document.getElementById("password").value = DEFAULT_PASS;
+    showNotification("Default credentials filled");
+  }
+
+  function setIframeSrc() {
+    const src = iframe.dataset.src;
+    if (!iframe.src) {
+      iframe.src = src;
+      iframe.setAttribute("aria-hidden", "false");
+      loading.style.display = "flex";
+    }
+  }
+
+  iframe.addEventListener("load", () => {
+    loading.style.display = "none";
+  });
+
+  function attemptLogin() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value;
+    const remember = document.getElementById("remember").checked;
+
+    if (user === DEFAULT_USER && pass === DEFAULT_PASS) {
+      try {
+        if (remember) {
+          sessionStorage.setItem("devportal_remember", "true");
+        }
+        sessionStorage.setItem("devportal_logged_in", "true");
+      } catch (e) {}
+      loginOverlay.style.display = "none";
+      showNotification("Welcome back, " + user + "!");
+      logoutBtn.style.display = "inline-block";
+      setIframeSrc();
+    } else {
+      showNotification("Invalid credentials");
+    }
+  }
+
+  function logout() {
+    try {
+      const remember = sessionStorage.getItem("devportal_remember") === "true";
+      sessionStorage.removeItem("devportal_logged_in");
+      if (!remember) {
+        sessionStorage.removeItem("devportal_remember");
+      }
+    } catch (e) {}
+    iframe.removeAttribute("src");
+    iframe.setAttribute("aria-hidden", "true");
+    logoutBtn.style.display = "none";
+    loginOverlay.style.display = "flex";
+    showNotification("Logged out");
+  }
+
+  function refreshDocs() {
+    if (!isLoggedIn()) {
+      showNotification("Please sign in first");
+      return;
+    }
+    loading.style.display = "flex";
+    try {
+      iframe.contentWindow.location.reload();
+    } catch (e) {
+      const s = iframe.src;
+      iframe.src = "";
+      setTimeout(() => (iframe.src = s), 50);
+    }
+    showNotification("Reloading API documentation...");
+  }
+
+  function isLoggedIn() {
+    try {
+      return sessionStorage.getItem("devportal_logged_in") === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function toggleTheme() {
+    const body = document.body;
+    const isLight = body.classList.toggle("light-mode");
+    themeToggle.textContent = isLight ? "☀️" : "🌙";
+    try {
+      sessionStorage.setItem("devportal_theme", isLight ? "light" : "dark");
+    } catch (e) {}
+    showNotification(isLight ? "Light mode enabled" : "Dark mode enabled");
+  }
+
+  function initTheme() {
+    try {
+      const savedTheme = sessionStorage.getItem("devportal_theme");
+      if (savedTheme === "light") {
+        document.body.classList.add("light-mode");
+        themeToggle.textContent = "☀️";
+      } else {
+        themeToggle.textContent = "🌙";
+      }
+    } catch (e) {
+      themeToggle.textContent = "🌙";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initTheme();
+    if (isLoggedIn()) {
+      loginOverlay.style.display = "none";
+      logoutBtn.style.display = "inline-block";
+      setIframeSrc();
+    } else {
+      loginOverlay.style.display = "flex";
+      iframe.removeAttribute("src");
+      iframe.setAttribute("aria-hidden", "true");
+      loading.style.display = "none";
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.key === "r") {
+      e.preventDefault();
+      refreshDocs();
+    }
+  });
+</script>
+</body>
+</html>

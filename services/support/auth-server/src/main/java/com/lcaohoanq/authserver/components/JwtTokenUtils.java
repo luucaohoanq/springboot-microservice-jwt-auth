@@ -1,7 +1,6 @@
 
 package com.lcaohoanq.authserver.components;
 
-import com.lcaohoanq.authserver.domain.token.Token;
 import com.lcaohoanq.authserver.domain.token.TokenRepository;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
 import com.lcaohoanq.commonlibrary.exceptions.ExpiredTokenException;
@@ -166,28 +165,4 @@ public class JwtTokenUtils {
     }
   }
 
-  public boolean validateTokenWithUser(String token, Long userId) {
-    try {
-      Token existingToken =
-          tokenRepository
-              .findByToken(token)
-              .orElse(null);
-
-      // Check token existence and revocation (optional - for token blacklisting)
-      if (existingToken != null && existingToken.isRevoked()) {
-        throw new JwtAuthenticationException("Token is invalid or has been revoked");
-      }
-
-      Long tokenUserId = extractUserId(token);
-      
-      // Check token matches user
-      if (!userId.equals(tokenUserId)) {
-        throw new JwtAuthenticationException("Token does not match user");
-      }
-
-      return validateToken(token);
-    } catch (Exception e) {
-      throw new JwtAuthenticationException("Token validation failed: " + e.getMessage());
-    }
-  }
 }

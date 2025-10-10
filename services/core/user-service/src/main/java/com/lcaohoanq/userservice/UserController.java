@@ -8,6 +8,8 @@ import com.lcaohoanq.commonlibrary.dto.UserResponse;
 import com.lcaohoanq.commonlibrary.enums.Role;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -220,6 +222,21 @@ public class UserController {
             };
         } catch (IllegalArgumentException e) {
             log.warn("Invalid role: {}", userRole);
+            return false;
+        }
+    }
+
+    private static final Map<Role, Set<Role>> PERMISSIONS = Map.of(
+        Role.USER, Set.of(Role.USER),
+        Role.STAFF, Set.of(Role.USER, Role.STAFF),
+        Role.ADMIN, Set.of(Role.USER, Role.STAFF, Role.ADMIN)
+    );
+
+    private boolean hasPermissionV2(String userRole, Role requiredRole) {
+        try {
+            Role current = Role.valueOf(userRole);
+            return PERMISSIONS.getOrDefault(current, Set.of()).contains(requiredRole);
+        } catch (Exception e) {
             return false;
         }
     }
