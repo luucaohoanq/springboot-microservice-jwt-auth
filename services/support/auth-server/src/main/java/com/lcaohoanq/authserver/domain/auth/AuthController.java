@@ -1,6 +1,5 @@
-package com.lcaohoanq.authserver.controller;
+package com.lcaohoanq.authserver.domain.auth;
 
-import com.lcaohoanq.authserver.services.AuthService;
 import com.lcaohoanq.authserver.domain.token.TokenService;
 import com.lcaohoanq.authserver.feign.UserFeign;
 import com.lcaohoanq.commonlibrary.apis.MyApiResponse;

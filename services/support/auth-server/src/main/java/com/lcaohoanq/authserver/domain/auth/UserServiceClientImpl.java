@@ -1,8 +1,9 @@
-package com.lcaohoanq.authserver.services;
+package com.lcaohoanq.authserver.domain.auth;
 
 import com.lcaohoanq.authserver.feign.UserFeign;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
 import com.lcaohoanq.commonlibrary.utils.FeignResponseResolver;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

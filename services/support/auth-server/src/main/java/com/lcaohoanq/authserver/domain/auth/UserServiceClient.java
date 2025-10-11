@@ -1,4 +1,4 @@
-package com.lcaohoanq.authserver.services;
+package com.lcaohoanq.authserver.domain.auth;
 
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
 

@@ -1,4 +1,4 @@
-package com.lcaohoanq.authserver.dto;
+package com.lcaohoanq.authserver.domain.auth;
 
 public record AuthDTO(
     String email,

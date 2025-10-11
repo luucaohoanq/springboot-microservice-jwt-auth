@@ -3,6 +3,7 @@ package com.lcaohoanq.userservice.data;
 import com.lcaohoanq.commonlibrary.enums.Role;
 import com.lcaohoanq.userservice.User;
 import com.lcaohoanq.userservice.UserRepository;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -26,6 +27,9 @@ public class DataInitializer {
             adminUser.setUsername("admin");
             adminUser.setEmail("admin@example.com");
             adminUser.setPassword(defaultPassword);
+            adminUser.setActivationKey(UUID.randomUUID().toString().substring(0, 20));
+            adminUser.setResetKey(UUID.randomUUID().toString().substring(0, 20));
+            adminUser.setLangKey("en");
             adminUser.setRole(Role.ADMIN);
             userRepository.save(adminUser);
 
@@ -33,6 +37,9 @@ public class DataInitializer {
             staffUser.setUsername("staff");
             staffUser.setEmail("staff@example.com");
             staffUser.setPassword(defaultPassword);
+            staffUser.setActivationKey(UUID.randomUUID().toString().substring(0, 20));
+            staffUser.setResetKey(UUID.randomUUID().toString().substring(0, 20));
+            staffUser.setLangKey("en");
             staffUser.setRole(Role.STAFF);
             userRepository.save(staffUser);
 
@@ -40,6 +47,9 @@ public class DataInitializer {
             regularUser.setUsername("user");
             regularUser.setEmail("user@example.com");
             regularUser.setPassword(defaultPassword);
+            regularUser.setActivationKey(UUID.randomUUID().toString().substring(0, 20));
+            regularUser.setResetKey(UUID.randomUUID().toString().substring(0, 20));
+            regularUser.setLangKey("en");
             regularUser.setRole(Role.USER);
             userRepository.save(regularUser);
 

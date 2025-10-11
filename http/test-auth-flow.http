@@ -28,8 +28,8 @@ POST {{gateway-url}}/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "johndoe",
-  "email": "john.doe@example.com", 
+  "username": "lcaohoanq",
+  "email": "hoangclw@gmail.com",
   "password": "password123"
 }
 
@@ -51,7 +51,7 @@ POST {{gateway-url}}/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "admin",
+  "username": "lcaohoanq",
   "password": "password123"
 }
 

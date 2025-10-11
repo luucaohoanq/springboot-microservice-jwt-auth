@@ -3,9 +3,7 @@ package com.lcaohoanq.authserver.domain.token;
 
 import com.lcaohoanq.authserver.components.JwtTokenUtils;
 import com.lcaohoanq.authserver.feign.UserFeign;
-import com.lcaohoanq.authserver.services.UserServiceClientImpl;
-import com.lcaohoanq.commonlibrary.apis.MyApiResponse;
-import com.lcaohoanq.commonlibrary.apis.MyApiResponse.Success;
+import com.lcaohoanq.authserver.domain.auth.UserServiceClientImpl;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
 import com.lcaohoanq.commonlibrary.exceptions.ExpiredTokenException;
 import com.lcaohoanq.commonlibrary.exceptions.TokenNotFoundException;

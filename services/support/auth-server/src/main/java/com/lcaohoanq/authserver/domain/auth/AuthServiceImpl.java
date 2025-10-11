@@ -1,14 +1,13 @@
-package com.lcaohoanq.authserver.services;
+package com.lcaohoanq.authserver.domain.auth;
 
 import com.lcaohoanq.authserver.components.JwtTokenUtils;
+import com.lcaohoanq.authserver.domain.mail.MailService;
 import com.lcaohoanq.authserver.domain.token.TokenService;
 import com.lcaohoanq.authserver.feign.UserFeign;
-import com.lcaohoanq.commonlibrary.apis.MyApiResponse;
 import com.lcaohoanq.commonlibrary.dto.LoginRequest;
 import com.lcaohoanq.commonlibrary.dto.LoginResponse;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
 import com.lcaohoanq.commonlibrary.dto.RefreshTokenRequest;
-import com.lcaohoanq.commonlibrary.dto.ServiceResponse;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +24,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenUtils jwtTokenUtils;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
 
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -58,7 +58,10 @@ public class AuthServiceImpl implements AuthService {
                 user.id(),
                 user.username(),
                 user.email(),
-                user.role()
+                user.role(),
+                user.activationKey(),
+                user.resetKey(),
+                user.langKey()
             );
 
             // 6️⃣ Generate access token and refresh token
@@ -67,6 +70,8 @@ public class AuthServiceImpl implements AuthService {
 
             // 7️⃣ Store token in database
             tokenService.addToken(user.id(), accessToken, false);
+
+            mailService.sendActivationEmail(user);
 
             // 8️⃣ Return LoginResponse
             return LoginResponse.builder()
@@ -176,7 +181,10 @@ public class AuthServiceImpl implements AuthService {
                 userId,
                 username,
                 email,
-                roleStr
+                roleStr,
+                user.activationKey(),
+                user.resetKey(),
+                user.langKey()
             );
 
             String newAccessToken = jwtTokenUtils.generateToken(userInfo);

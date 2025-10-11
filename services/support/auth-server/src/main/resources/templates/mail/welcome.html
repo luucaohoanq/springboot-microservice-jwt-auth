@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="'Welcome to ' + ${app_name}"></title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+
+<h2 style="color: #19b719;" th:text="'Welcome to ' + ${app_name} + '!'"></h2>
+
+<p>
+  Dear <strong th:text="${name}"></strong>,
+</p>
+
+<p>
+  Thank you for joining <strong th:text="${app_name}"></strong>! We're excited to have you with us.
+</p>
+
+<p>
+  Best regards,<br>
+  <span th:text="'The ' + ${app_name} + ' Team'"></span>
+</p>
+
+<hr style="margin-top:20px; border:none; border-top:1px solid #ddd;">
+<small style="color:#666;"
+       th:text="${app_name} + ' Corporation | support@example.com | 0123 456 789'"></small>
+
+</body>
+</html>
