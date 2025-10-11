@@ -1,5 +1,6 @@
 package com.lcaohoanq.userservice;
 
+import com.lcaohoanq.commonlibrary.annotations.RequireRole;
 import com.lcaohoanq.commonlibrary.apis.MyApiResponse;
 import com.lcaohoanq.commonlibrary.dto.AuthenticationRequest;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
@@ -107,6 +108,18 @@ public class UserController {
         long userCount = userRepository.count();
         String stats = String.format("Total users: %d, Admin access granted to: %s", userCount, username);
         
+        return MyApiResponse.success(stats);
+    }
+
+    // ADMIN only - accessible to ADMIN only
+    @GetMapping("/admin/stats-v2")
+    @RequireRole(Role.ADMIN)
+    public ResponseEntity<MyApiResponse<String>> getAdminStatsV2(
+            @RequestHeader("X-User-Name") String username
+    ) {
+        log.info("User {}) requesting admin stats", username);
+        long userCount = userRepository.count();
+        String stats = String.format("Total users: %d, Admin access granted to: %s", userCount, username);
         return MyApiResponse.success(stats);
     }
 
@@ -222,21 +235,6 @@ public class UserController {
             };
         } catch (IllegalArgumentException e) {
             log.warn("Invalid role: {}", userRole);
-            return false;
-        }
-    }
-
-    private static final Map<Role, Set<Role>> PERMISSIONS = Map.of(
-        Role.USER, Set.of(Role.USER),
-        Role.STAFF, Set.of(Role.USER, Role.STAFF),
-        Role.ADMIN, Set.of(Role.USER, Role.STAFF, Role.ADMIN)
-    );
-
-    private boolean hasPermissionV2(String userRole, Role requiredRole) {
-        try {
-            Role current = Role.valueOf(userRole);
-            return PERMISSIONS.getOrDefault(current, Set.of()).contains(requiredRole);
-        } catch (Exception e) {
             return false;
         }
     }

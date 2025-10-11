@@ -1,9 +1,10 @@
 package com.lcaohoanq.gatewayserver;
 
-import com.lcaohoanq.gatewayserver.configs.CRLFLogConverter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Optional;
+
+import com.lcaohoanq.commonlibrary.configs.CRLFLogConverter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

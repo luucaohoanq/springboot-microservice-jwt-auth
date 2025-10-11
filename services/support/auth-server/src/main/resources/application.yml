@@ -33,6 +33,7 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
+    instance-id: ${spring.application.name}
 
 server:
   port: 4005

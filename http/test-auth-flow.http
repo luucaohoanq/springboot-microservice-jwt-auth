@@ -17,8 +17,8 @@
 @user-service-url = http://localhost:4007
 
 # Variables to store tokens (will be set manually after each request)
-@access-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsInVzZXJJZCI6NCwiZW1haWwiOiJqb2huLmRvZUBleGFtcGxlLmNvbSIsInVzZXJuYW1lIjoiam9obmRvZSIsInN1YiI6ImpvaG5kb2UiLCJleHAiOjE3NjAwNjM2MzV9.NsPUP83WQMrbAabqbOhWX1CVjbiyyvUor05BAti2QrM
-@refresh-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsInRva2VuVHlwZSI6InJlZnJlc2giLCJ1c2VySWQiOjQsImVtYWlsIjoiam9obi5kb2VAZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6ImpvaG5kb2UiLCJzdWIiOiJqb2huZG9lIiwiZXhwIjoxNzYwMTQ2NDM1fQ.TYbBeKbOp2mDT8RF1wi4ywxP_r_pm55h5PC5nVc-sZ0
+@access-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU4iLCJ1c2VySWQiOjEsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6ImFkbWluIiwic3ViIjoiYWRtaW4iLCJleHAiOjE3NjAxNjkzNTJ9.34g-11AuuzPQhvobH7OohJOA02LLzH81s4u6z_Y5bwE
+@refresh-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU4iLCJ0b2tlblR5cGUiOiJyZWZyZXNoIiwidXNlcklkIjoxLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwidXNlcm5hbWUiOiJhZG1pbiIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzYwMjUyMTUyfQ.6j_-0Z5IQGPERFaMGxFZOxVmCNPptWwQh-bT3wkxJHs
 
 ###
 # 1. USER REGISTRATION
@@ -51,7 +51,7 @@ POST {{gateway-url}}/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "johndoe",
+  "username": "admin",
   "password": "password123"
 }
 
@@ -128,6 +128,9 @@ Authorization: Bearer {{access-token}}
 #   "timestamp": "2025-01-10T..."
 # }
 ###
+
+GET {{gateway-url}}/api/users/admin/stats-v2
+Authorization: Bearer {{access-token}}
 
 ###
 # 6. REFRESH TOKEN

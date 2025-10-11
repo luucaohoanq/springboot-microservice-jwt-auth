@@ -94,7 +94,14 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 
-	</dependencies>
+        <dependency>
+            <groupId>com.lcaohoanq</groupId>
+            <artifactId>common-library</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+
+    </dependencies>
 
 	<build>
 		<plugins>
