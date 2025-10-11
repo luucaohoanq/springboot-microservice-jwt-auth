@@ -1,6 +1,6 @@
 package com.lcaohoanq.productservice;
 
-import com.lcaohoanq.productservice.configs.CRLFLogConverter;
+import com.lcaohoanq.commonlibrary.configs.CRLFLogConverter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Optional;

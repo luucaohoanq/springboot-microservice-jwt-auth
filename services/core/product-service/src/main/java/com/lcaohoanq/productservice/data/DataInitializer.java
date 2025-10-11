@@ -50,6 +50,7 @@ public class DataInitializer {
                 .name("Smartphone")
                 .description("Latest model smartphone with advanced features")
                 .price(699.99)
+                .active(true)
                 .category(categoryRepository.findByName("Electronics").orElseThrow(
                     () -> new RuntimeException("Category not found")))
                 .build();
@@ -58,6 +59,7 @@ public class DataInitializer {
                 .name("Science Fiction Novel")
                 .description("A thrilling science fiction novel")
                 .price(19.99)
+                .active(true)
                 .category(categoryRepository.findByName("Books").orElseThrow(
                     () -> new RuntimeException("Category not found")))
                 .build();
@@ -66,6 +68,7 @@ public class DataInitializer {
                 .name("Jeans")
                 .description("Comfortable and stylish jeans")
                 .price(49.99)
+                .active(false)
                 .category(categoryRepository.findByName("Clothing").orElseThrow(
                     () -> new RuntimeException("Category not found")))
                 .build();
