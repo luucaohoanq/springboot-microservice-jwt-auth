@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Config Server Viewer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .config-key { word-break: break-word; }
+    .config-value { word-break: break-all; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+<div class="max-w-6xl mx-auto p-6">
+  <!-- Header -->
+  <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <h1 class="text-3xl font-bold text-slate-800 mb-2">Spring Config Server Viewer</h1>
+    <p class="text-slate-600">Browse configurations from local files or Config Server</p>
+  </div>
+
+  <!-- Control Panel -->
+  <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Application Name</label>
+        <select
+            id="appName"
+            class="w-full px-4 py-2 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+        >
+          <option value="">Select Application...</option>
+        </select>
+        <p class="text-xs text-slate-500 mt-1">Auto-loaded from configurations/</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Profile</label>
+        <input
+            id="profile"
+            placeholder="e.g., dev, prod"
+            class="w-full px-4 py-2 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+        />
+        <p class="text-xs text-slate-500 mt-1">Enter manually</p>
+      </div>
+      <div class="flex items-end">
+        <button
+            onclick="fetchConfig()"
+            class="w-full px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md"
+        >
+          Fetch Config
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loading" class="hidden bg-white rounded-xl shadow-lg p-12 text-center">
+    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+    <p class="text-slate-600 mt-4 font-medium">Loading configuration...</p>
+  </div>
+
+  <!-- Output Container -->
+  <div id="output"></div>
+</div>
+
+<script>
+  let currentConfig = null;
+
+  // Load applications on page load
+  window.addEventListener('DOMContentLoaded', loadApplications);
+
+  async function loadApplications() {
+    try {
+      // Fetch list of YAML files from configurations folder
+      const res = await fetch('/api/applications');
+      if (!res.ok) {
+        console.error('Could not load applications list');
+        return;
+      }
+
+      const apps = await res.json();
+      const select = document.getElementById('appName');
+
+      // Clear existing options except the first
+      select.innerHTML = '<option value="">Select Application...</option>';
+
+      // Add each application
+      apps.forEach(app => {
+        const option = document.createElement('option');
+        option.value = app;
+        option.textContent = app;
+        select.appendChild(option);
+      });
+
+    } catch (err) {
+      console.error('Error loading applications:', err);
+    }
+  }
+
+  // Fetch from Config Server
+  async function fetchConfig() {
+    const app = document.getElementById('appName').value.trim();
+    const profile = document.getElementById('profile').value.trim();
+
+    if (!app || !profile) {
+      showError('Please select an application and enter a profile');
+      return;
+    }
+
+    showLoading();
+
+    try {
+      const res = await fetch(`/${app}/${profile}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+
+      const data = await res.json();
+
+      currentConfig = {
+        name: data.name || app,
+        profiles: data.profiles || [profile],
+        label: data.label,
+        version: data.version,
+        source: 'config-server',
+        propertySources: data.propertySources || []
+      };
+
+      renderConfig(currentConfig);
+    } catch (err) {
+      showError(`Error fetching config: ${err.message}`);
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // Render configuration
+  function renderConfig(config) {
+    const output = document.getElementById('output');
+
+    // Metadata card
+    let html = `
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 mb-6 text-white">
+          <h2 class="text-2xl font-bold mb-4">Configuration Details</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p class="text-blue-100 text-sm mb-1">Application</p>
+              <p class="text-lg font-semibold">${config.name}</p>
+            </div>
+            <div>
+              <p class="text-blue-100 text-sm mb-1">Profile</p>
+              <p class="text-lg font-semibold">${config.profiles.join(', ')}</p>
+            </div>
+            <div>
+              <p class="text-blue-100 text-sm mb-1">Label</p>
+              <p class="text-lg font-semibold">${config.label || 'N/A'}</p>
+            </div>
+            <div>
+              <p class="text-blue-100 text-sm mb-1">Properties</p>
+              <p class="text-lg font-semibold">${getTotalPropertyCount(config)}</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+    // Property sources
+    config.propertySources.forEach((ps, idx) => {
+      const propEntries = Object.entries(ps.source || {});
+
+      html += `
+          <div class="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-r from-slate-700 to-slate-800 p-4 cursor-pointer flex justify-between items-center" onclick="toggleSection(${idx})">
+              <div>
+                <h3 class="text-white font-bold text-lg">Property Source ${idx + 1}</h3>
+                <p class="text-slate-300 text-sm mt-1">${ps.name || 'Unknown'}</p>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="text-white text-sm bg-slate-600 px-3 py-1 rounded-full">${propEntries.length} properties</span>
+                <svg class="w-6 h-6 text-white transform transition-transform" id="arrow${idx}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+            <div id="section${idx}" class="p-6">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead>
+                    <tr class="bg-slate-50">
+                      <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 border-b-2 border-slate-200">Property Key</th>
+                      <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 border-b-2 border-slate-200">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+        `;
+
+      propEntries.forEach(([key, value]) => {
+        const isSensitive = key.toLowerCase().includes('password') ||
+            key.toLowerCase().includes('secret') ||
+            key.toLowerCase().includes('token') ||
+            (key.toLowerCase().includes('key') && !key.includes('eureka') && !key.includes('serviceurl'));
+
+        const displayValue = isSensitive ? maskValue(String(value)) : String(value);
+        const sensitiveTag = isSensitive ? '<span class="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-semibold">🔒 sensitive</span>' : '';
+
+        html += `
+            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+              <td class="px-4 py-3 font-mono text-sm font-medium text-slate-700 config-key">
+                ${escapeHtml(key)}${sensitiveTag}
+              </td>
+              <td class="px-4 py-3 font-mono text-sm text-slate-600 config-value ${isSensitive ? 'text-red-600' : ''}">
+                ${escapeHtml(displayValue)}
+              </td>
+            </tr>
+          `;
+      });
+
+      html += `
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+    });
+
+    output.innerHTML = html;
+  }
+
+  function toggleSection(idx) {
+    const section = document.getElementById(`section${idx}`);
+    const arrow = document.getElementById(`arrow${idx}`);
+    section.classList.toggle('hidden');
+    arrow.classList.toggle('rotate-180');
+  }
+
+  function getTotalPropertyCount(config) {
+    return config.propertySources.reduce((sum, ps) => sum + Object.keys(ps.source || {}).length, 0);
+  }
+
+  function maskValue(value) {
+    const str = String(value);
+    if (str.length <= 4) return '****';
+    return str.substring(0, 2) + '*'.repeat(Math.min(str.length - 4, 8)) + str.substring(str.length - 2);
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function showLoading() {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('output').innerHTML = '';
+  }
+
+  function hideLoading() {
+    document.getElementById('loading').classList.add('hidden');
+  }
+
+  function showError(message) {
+    const output = document.getElementById('output');
+    output.innerHTML = `
+        <div class="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+          <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+              <h3 class="text-red-800 font-bold text-lg mb-1">Error</h3>
+              <p class="text-red-700">${escapeHtml(message)}</p>
+            </div>
+          </div>
+        </div>
+      `;
+  }
+
+  // Allow enter key to fetch
+  document.getElementById('profile').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') fetchConfig();
+  });
+</script>
+</body>
+</html>

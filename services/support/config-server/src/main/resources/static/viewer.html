@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Config Server Viewer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f7f8fa;
+      padding: 2rem;
+    }
+    h1 {
+      color: #333;
+    }
+    input, button {
+      padding: 0.5rem;
+      margin: 0.2rem;
+      font-size: 1rem;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 1rem;
+      width: 100%;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    th {
+      background: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+<h1>Spring Config Server Viewer</h1>
+<div>
+  <input id="appName" placeholder="Application (e.g., auth-service)" />
+  <input id="profile" placeholder="Profile (e.g., dev)" />
+  <button onclick="fetchConfig()">Fetch</button>
+</div>
+<div id="output"></div>
+
+<script>
+  async function fetchConfig() {
+    const app = document.getElementById('appName').value.trim();
+    const profile = document.getElementById('profile').value.trim();
+    const output = document.getElementById('output');
+    output.innerHTML = '';
+
+    if (!app || !profile) {
+      output.innerHTML = '<p style="color:red">Please enter app and profile.</p>';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/${app}/${profile}`);
+      if (!res.ok) throw new Error('Error fetching config');
+      const data = await res.json();
+
+      const props = {};
+      (data.propertySources || []).forEach(src => {
+        Object.assign(props, src.source);
+      });
+
+      let html = '<table><tr><th>Property</th><th>Value</th></tr>';
+      Object.entries(props).forEach(([k, v]) => {
+        html += `<tr><td>${k}</td><td>${v}</td></tr>`;
+      });
+      html += '</table>';
+      output.innerHTML = html;
+    } catch (err) {
+      output.innerHTML = `<p style="color:red">${err.message}</p>`;
+    }
+  }
+</script>
+</body>
+</html>
