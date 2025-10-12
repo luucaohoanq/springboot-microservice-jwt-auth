@@ -6,11 +6,13 @@ import com.lcaohoanq.commonlibrary.dto.AuthenticationRequest;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
 import com.lcaohoanq.commonlibrary.dto.ServiceResponse;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
+import com.lcaohoanq.commonlibrary.enums.LangKey;
 import com.lcaohoanq.commonlibrary.enums.Role;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -75,17 +78,29 @@ public class UserController {
     }
 
     // STAFF role and above - accessible to STAFF, ADMIN
-    @GetMapping
-    public ResponseEntity<MyApiResponse<List<UserResponse>>> getAllUsers(
-        @RequestHeader("X-User-Name") String username,
-        @RequestHeader("X-User-Role") String role
-    ) {
-        log.info("User {} (Role: {}) requesting all users", username, role);
-        
-        if (!hasPermission(role, Role.STAFF)) {
-            return MyApiResponse.forbidden("Access denied: STAFF role required");
-        }
+//    @GetMapping
+//    public ResponseEntity<MyApiResponse<List<UserResponse>>> getAllUsers(
+//        @RequestHeader("X-User-Name") String username,
+//        @RequestHeader("X-User-Role") String role
+//    ) {
+//        log.info("User {} (Role: {}) requesting all users", username, role);
+//
+//        if (!hasPermission(role, Role.STAFF)) {
+//            return MyApiResponse.forbidden("Access denied: STAFF role required");
+//        }
+//
+//        return MyApiResponse.success(
+//            userRepository.findAll().stream()
+//                .map(User::toResponse)
+//                .toList()
+//        );
+//    }
 
+    // ADMIN only - accessible to ADMIN only
+    @GetMapping
+    @RequireRole(Role.ADMIN)
+    public ResponseEntity<MyApiResponse<List<UserResponse>>> getAllUsers(
+    ) {
         return MyApiResponse.success(
             userRepository.findAll().stream()
                 .map(User::toResponse)
@@ -94,22 +109,22 @@ public class UserController {
     }
 
     // ADMIN only - accessible to ADMIN only
-    @GetMapping("/admin/stats")
-    public ResponseEntity<MyApiResponse<String>> getAdminStats(
-        @RequestHeader("X-User-Name") String username,
-        @RequestHeader("X-User-Role") String role
-    ) {
-        log.info("User {} (Role: {}) requesting admin stats", username, role);
-        
-        if (!hasPermission(role, Role.ADMIN)) {
-            return MyApiResponse.forbidden("Access denied: ADMIN role required");
-        }
-
-        long userCount = userRepository.count();
-        String stats = String.format("Total users: %d, Admin access granted to: %s", userCount, username);
-        
-        return MyApiResponse.success(stats);
-    }
+//    @GetMapping("/admin/stats")
+//    public ResponseEntity<MyApiResponse<String>> getAdminStats(
+//        @RequestHeader("X-User-Name") String username,
+//        @RequestHeader("X-User-Role") String role
+//    ) {
+//        log.info("User {} (Role: {}) requesting admin stats", username, role);
+//
+//        if (!hasPermission(role, Role.ADMIN)) {
+//            return MyApiResponse.forbidden("Access denied: ADMIN role required");
+//        }
+//
+//        long userCount = userRepository.count();
+//        String stats = String.format("Total users: %d, Admin access granted to: %s", userCount, username);
+//
+//        return MyApiResponse.success(stats);
+//    }
 
     // ADMIN only - accessible to ADMIN only
     @GetMapping("/admin/stats-v2")
@@ -189,6 +204,10 @@ public class UserController {
                 .email(registerRequest.getEmail())
                 .username(registerRequest.getUsername())
                 .password(registerRequest.getPassword()) // This will be already encrypted by auth-service
+                .activationKey(UUID.randomUUID().toString())
+                .resetKey(UUID.randomUUID().toString())
+                .langKey(LangKey.EN.getKey())
+                .activated(false)
                 .role(Role.USER)
                 .build();
             var savedUser = userRepository.save(newUser);
@@ -213,6 +232,9 @@ public class UserController {
                 .email(registerRequest.getEmail())
                 .username(registerRequest.getUsername())
                 .password(registerRequest.getPassword())
+                .activationKey(UUID.randomUUID().toString())
+                .resetKey(UUID.randomUUID().toString())
+                .activated(false)
                 .role(Role.USER)
                 .build();
             var savedUser = userRepository.save(newUser);
@@ -220,6 +242,25 @@ public class UserController {
         } catch (Exception e) {
             log.error("Failed to create user: {}", e.getMessage());
             return MyApiResponse.badRequest("Failed to create user: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/activate-registration")
+    public ResponseEntity<Void> activateUser(@RequestParam String key) {
+        try {
+            var user = userRepository.findOneByActivationKeyAndActivatedIsFalse(key)
+                .map(u -> {
+                    u.setActivated(true);
+                    u.setActivationKey(null);
+                    return u;
+                })
+                .orElseThrow(() -> new Exception("Invalid activation key"));
+            userRepository.save(user);
+            return ResponseEntity.noContent().build(); // ✅ 204 without body
+        } catch (Exception e) {
+            return ResponseEntity
+                .badRequest()
+                .body(null); // hoặc dùng ResponseEntity.status(400).build()
         }
     }
 

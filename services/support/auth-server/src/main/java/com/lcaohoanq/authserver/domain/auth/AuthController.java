@@ -2,19 +2,24 @@ package com.lcaohoanq.authserver.domain.auth;
 
 import com.lcaohoanq.authserver.domain.token.TokenService;
 import com.lcaohoanq.authserver.feign.UserFeign;
+import com.lcaohoanq.commonlibrary.annotations.RequireRole;
 import com.lcaohoanq.commonlibrary.apis.MyApiResponse;
 import com.lcaohoanq.commonlibrary.dto.LoginRequest;
 import com.lcaohoanq.commonlibrary.dto.LoginResponse;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
 import com.lcaohoanq.commonlibrary.dto.RefreshTokenRequest;
+import com.lcaohoanq.commonlibrary.enums.Role;
+import com.lcaohoanq.commonlibrary.exceptions.AccountResourceException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -118,6 +123,27 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Token validation failed", e);
             return MyApiResponse.unauthorized("Token validation failed");
+        }
+    }
+
+    /**
+     * Account activation endpoint - activates user account using activation key
+     * This is a public endpoint that users access from their email
+     * @param key activation key sent to user's email
+     * @return Success or error response
+     */
+    @GetMapping("/activate")
+    public ResponseEntity<MyApiResponse<String>> activateAccount(@RequestParam(value = "key") String key) {
+        try {
+            log.info("Account activation attempt with key: {}", key);
+            authService.activateRegistration(key);
+            return MyApiResponse.success("Account activated successfully! You can now log in.");
+        } catch (AccountResourceException e) {
+            log.error("Account activation failed for key: {}", key, e);
+            return MyApiResponse.badRequest("Account activation failed: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error during account activation for key: {}", key, e);
+            return MyApiResponse.badRequest("Account activation failed: Invalid or expired activation key");
         }
     }
 

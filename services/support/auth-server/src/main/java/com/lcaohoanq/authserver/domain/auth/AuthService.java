@@ -5,6 +5,7 @@ import com.lcaohoanq.commonlibrary.dto.LoginResponse;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
 import com.lcaohoanq.commonlibrary.dto.RefreshTokenRequest;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Optional;
 
 public interface AuthService {
 
@@ -13,5 +14,6 @@ public interface AuthService {
     void register(RegisterRequest registerRequest);
     LoginResponse refreshToken(RefreshTokenRequest refreshTokenRequest) throws Exception;
     boolean validateToken(String token);
+    void activateRegistration(String key);
 
 }

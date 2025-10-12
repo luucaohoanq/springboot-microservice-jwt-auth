@@ -7,7 +7,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
+#    show-sql: true
     properties:
       hibernate:
         format_sql: true
@@ -23,3 +23,12 @@ decorator:
   datasource:
     p6spy:
       enable-logging: true
+
+# Scalar Config
+# Ref: https://guides.scalar.com/scalar/scalar-api-references/integrations/spring-boot
+scalar:
+  enabled: true
+
+  #  https://registry.scalar.com/@scalar/apis/galaxy/latest?format=json
+  url: https://cdn.jsdelivr.net/npm/@scalar/galaxy/dist/latest.json
+  path: /scalar

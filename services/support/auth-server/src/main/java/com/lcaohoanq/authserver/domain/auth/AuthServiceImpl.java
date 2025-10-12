@@ -4,12 +4,16 @@ import com.lcaohoanq.authserver.components.JwtTokenUtils;
 import com.lcaohoanq.authserver.domain.mail.MailService;
 import com.lcaohoanq.authserver.domain.token.TokenService;
 import com.lcaohoanq.authserver.feign.UserFeign;
+import com.lcaohoanq.commonlibrary.annotations.RequireRole;
 import com.lcaohoanq.commonlibrary.dto.LoginRequest;
 import com.lcaohoanq.commonlibrary.dto.LoginResponse;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
 import com.lcaohoanq.commonlibrary.dto.RefreshTokenRequest;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
+import com.lcaohoanq.commonlibrary.enums.Role;
+import com.lcaohoanq.commonlibrary.exceptions.AccountResourceException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -58,6 +62,7 @@ public class AuthServiceImpl implements AuthService {
                 user.id(),
                 user.username(),
                 user.email(),
+                false,
                 user.role(),
                 user.activationKey(),
                 user.resetKey(),
@@ -71,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
             // 7️⃣ Store token in database
             tokenService.addToken(user.id(), accessToken, false);
 
-            mailService.sendActivationEmail(user);
+//            mailService.sendActivationEmail(user);
 
             // 8️⃣ Return LoginResponse
             return LoginResponse.builder()
@@ -140,6 +145,8 @@ public class AuthServiceImpl implements AuthService {
             }
             
             log.info("User {} registered successfully", registerRequest.getUsername());
+
+            mailService.sendActivationEmail(createUserResponse.getBody().getData());
             
         } catch (RuntimeException e) {
             log.error("Registration failed for user: {}", registerRequest.getUsername(), e);
@@ -181,6 +188,7 @@ public class AuthServiceImpl implements AuthService {
                 userId,
                 username,
                 email,
+                false,
                 roleStr,
                 user.activationKey(),
                 user.resetKey(),
@@ -215,6 +223,19 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             log.error("Token validation failed", e);
             return false;
+        }
+    }
+
+    @Override
+    public void activateRegistration(String key) {
+        try{
+            var data  = userFeign.activateUser(key);
+            if(!data.getStatusCode().is2xxSuccessful()){
+                throw new AccountResourceException("No user found for this activation key");
+            }
+        } catch (Exception e){
+            log.error("Account activation failed", e);
+            throw new AccountResourceException("No user found for this activation key");
         }
     }
 
