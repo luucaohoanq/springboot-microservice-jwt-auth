@@ -1,5 +1,6 @@
 package com.lcaohoanq.userservice.data;
 
+import com.lcaohoanq.commonlibrary.enums.LangKey;
 import com.lcaohoanq.commonlibrary.enums.Role;
 import com.lcaohoanq.userservice.User;
 import com.lcaohoanq.userservice.UserRepository;
@@ -28,9 +29,8 @@ public class DataInitializer {
             adminUser.setEmail("admin@example.com");
             adminUser.setPassword(defaultPassword);
             adminUser.setActivationKey(UUID.randomUUID().toString());
-            adminUser.setResetKey(UUID.randomUUID().toString());
             adminUser.setActivated(true);
-            adminUser.setLangKey("en");
+            adminUser.setLangKey(LangKey.EN.getKey());
             adminUser.setRole(Role.ADMIN);
             userRepository.save(adminUser);
 
@@ -39,8 +39,7 @@ public class DataInitializer {
             staffUser.setEmail("staff@example.com");
             staffUser.setPassword(defaultPassword);
             staffUser.setActivationKey(UUID.randomUUID().toString());
-            staffUser.setResetKey(UUID.randomUUID().toString());
-            staffUser.setLangKey("en");
+            staffUser.setLangKey(LangKey.EN.getKey());
             staffUser.setRole(Role.STAFF);
             userRepository.save(staffUser);
 
@@ -49,8 +48,7 @@ public class DataInitializer {
             regularUser.setEmail("user@example.com");
             regularUser.setPassword(defaultPassword);
             regularUser.setActivationKey(UUID.randomUUID().toString());
-            regularUser.setResetKey(UUID.randomUUID().toString());
-            regularUser.setLangKey("en");
+            regularUser.setLangKey(LangKey.EN.getKey());
             regularUser.setRole(Role.USER);
             userRepository.save(regularUser);
 

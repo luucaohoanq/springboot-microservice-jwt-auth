@@ -9,13 +9,16 @@ import com.lcaohoanq.commonlibrary.dto.LoginRequest;
 import com.lcaohoanq.commonlibrary.dto.LoginResponse;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
 import com.lcaohoanq.commonlibrary.dto.RefreshTokenRequest;
+import com.lcaohoanq.commonlibrary.dto.ResetPasswordRequest;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
 import com.lcaohoanq.commonlibrary.enums.Role;
+import com.lcaohoanq.commonlibrary.exceptions.AccountNotActivatedException;
 import com.lcaohoanq.commonlibrary.exceptions.AccountResourceException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,8 +33,14 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
 
+    @Value("${jwt.expiration}")
+    private long expiration; // in seconds
+
+    @Value("${jwt.expiration-refresh-token}")
+    private long expirationRefreshToken; // in seconds
+
     @Override
-    public LoginResponse login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest, HttpServletRequest request) {
         log.info("🔐 Starting login process for user: {}", loginRequest.getUsername());
         try {
             // 1️⃣ Create authentication request
@@ -49,13 +58,24 @@ public class AuthServiceImpl implements AuthService {
 
             // 3️⃣ Check if authentication was successful
             if (body == null || !body.isSuccess()) {
-                log.error("🔐 Authentication failed - body is null: {} or not successful: {}", 
-                    body == null, body != null ? !body.isSuccess() : "N/A");
+                log.error("🔐 Authentication failed - body is null: {} or not successful: {}",
+                          body == null, body != null ? true : "N/A");
                 throw new RuntimeException("Invalid credentials");
             }
 
             // 4️⃣ Get authenticated user data from response
             UserResponse user = body.getData();
+
+            // 4️⃣ Handle unactivated user
+            if (!user.activated() && user.activationKey() != null) {
+                log.warn("⚠️ User {} is not activated. Sending activation email...", user.username());
+                // Send activation email (async)
+                mailService.sendActivationEmail(user);
+                // Stop here — do NOT continue login
+                throw new AccountNotActivatedException(
+                    "Account not activated. Activation email has been sent to " + user.email()
+                );
+            }
 
             // 5️⃣ Create UserInfo for JWT generation
             var userInfo = new UserResponse(
@@ -74,17 +94,17 @@ public class AuthServiceImpl implements AuthService {
             String refreshToken = jwtTokenUtils.generateRefreshToken(userInfo);
 
             // 7️⃣ Store token in database
-            tokenService.addToken(user.id(), accessToken, false);
+            tokenService.addToken(user.id(), accessToken, isMobileDevice(request.getHeader("User-Agent")));
 
-//            mailService.sendActivationEmail(user);
+            mailService.sendWelcomeMail(user);
 
             // 8️⃣ Return LoginResponse
             return LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
-                .expiresIn(3600L) // 1 hour
-                .refreshExpiresIn(86400L) // 24 hours
+                .expiresIn(expiration) // 1 hour
+                .refreshExpiresIn(expirationRefreshToken) // 24 hours
                 .user(user)
                 .build();
 
@@ -239,12 +259,85 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Override
+    public void requestPasswordReset(String email) {
+        try {
+            var response = userFeign.getUserByEmail(email);
+            if (response.getBody() == null || !response.getBody().isSuccess()) {
+                throw new RuntimeException("Email address not found");
+            }
+            var data = userFeign.requestPasswordReset(email);
+
+            if(data.getStatusCode().is2xxSuccessful()){
+                mailService.sendPasswordResetMail(response.getBody().getData());
+            } else {
+                throw new AccountResourceException("Error requesting password reset");
+            }
+        } catch (Exception e) {
+            log.error("Password reset request failed for email: {}", email, e);
+            throw new RuntimeException("Password reset request failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void verifyResetKey(String key) {
+        try{
+            var data = userFeign.verifyResetKey(key);
+
+            if(!data.getStatusCode().is2xxSuccessful()){
+                throw new AccountResourceException("Invalid or expired password reset key");
+            }
+        }catch(Exception e){
+
+            log.error("Password reset key verification failed", e);
+            throw new AccountResourceException("Invalid or expired password reset key");
+        }
+    }
+
+    @Override
+    public void finishPasswordReset(ResetPasswordRequest request) {
+        try{
+
+            String encodedPassword = passwordEncoder.encode(request.newPassword());
+
+            var user = userFeign.getUserByEmail(request.email());
+
+            if(user.getBody() == null || !user.getBody().isSuccess()){
+                throw new AccountResourceException("No user found for this email");
+            }
+
+            var newRequest = new ResetPasswordRequest(
+                request.email(),
+                request.key(),
+                encodedPassword,
+                request.confirmNewPassword()
+            );
+
+            var data = userFeign.finishPasswordReset(newRequest);
+
+            if(!data.getStatusCode().is2xxSuccessful()){
+                throw new AccountResourceException("Error finishing password reset");
+            }
+        }catch(Exception e){
+            log.error("Finishing password reset failed", e);
+            throw new AccountResourceException("Error finishing password reset: " + e.getMessage());
+        }
+    }
+
     private String extractTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
         return null;
+    }
+
+    private boolean isMobileDevice(String userAgent) {
+        // Kiểm tra User-Agent header để xác định thiết bị di động
+        if (userAgent == null) {
+            return false;
+        }
+        return userAgent.toLowerCase().contains("mobile");
     }
 
 }

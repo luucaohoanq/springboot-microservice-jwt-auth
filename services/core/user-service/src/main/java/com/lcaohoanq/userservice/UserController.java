@@ -4,6 +4,7 @@ import com.lcaohoanq.commonlibrary.annotations.RequireRole;
 import com.lcaohoanq.commonlibrary.apis.MyApiResponse;
 import com.lcaohoanq.commonlibrary.dto.AuthenticationRequest;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
+import com.lcaohoanq.commonlibrary.dto.ResetPasswordRequest;
 import com.lcaohoanq.commonlibrary.dto.ServiceResponse;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
 import com.lcaohoanq.commonlibrary.enums.LangKey;
@@ -205,7 +206,6 @@ public class UserController {
                 .username(registerRequest.getUsername())
                 .password(registerRequest.getPassword()) // This will be already encrypted by auth-service
                 .activationKey(UUID.randomUUID().toString())
-                .resetKey(UUID.randomUUID().toString())
                 .langKey(LangKey.EN.getKey())
                 .activated(false)
                 .role(Role.USER)
@@ -245,6 +245,7 @@ public class UserController {
         }
     }
 
+    // Send activation email for user after registration
     @GetMapping("/activate-registration")
     public ResponseEntity<Void> activateUser(@RequestParam String key) {
         try {
@@ -262,6 +263,54 @@ public class UserController {
                 .badRequest()
                 .body(null); // hoặc dùng ResponseEntity.status(400).build()
         }
+    }
+
+    // 3 API Endpoint for password reset process
+    @PostMapping("/reset-password/init")
+    public ResponseEntity<Void> requestPasswordReset(@RequestParam String email) {
+        userRepository.findByEmail(email)
+            .ifPresent(user -> {
+                user.setResetKey(UUID.randomUUID().toString());
+                userRepository.save(user);
+            });
+        // Always return 204 to prevent email enumeration
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/reset-password/verify")
+    public ResponseEntity<Void> verifyResetKey(@RequestParam String key) {
+        boolean exists = userRepository.findOneByResetKey(key).isPresent();
+        if(exists) {
+            return ResponseEntity.noContent().build();
+        }else{
+            log.warn("Invalid reset key attempt: {}", key);
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    @PostMapping("/reset-password/finish")
+    public ResponseEntity<Void> finishPasswordReset(
+        @Valid @RequestBody ResetPasswordRequest request) {
+        var userOpt = userRepository.findOneByResetKeyAndEmail(request.key(), request.email());
+        if (userOpt.isEmpty()) {
+            log.warn("Password reset attempt with invalid key: {}", request.key());
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        var password = request.newPassword();
+        var confirmPassword = request.confirmNewPassword();
+
+        if (!password.equals(confirmPassword)) {
+            log.warn("Password and confirmation do not match for reset key: {}", request.key());
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        var user = userOpt.get();
+        user.setPassword(passwordEncoder.encode(password));
+        user.setResetKey(null); // clear the key after use
+        userRepository.save(user);
+
+        return ResponseEntity.noContent().build();
     }
 
     // Helper method to check role permissions

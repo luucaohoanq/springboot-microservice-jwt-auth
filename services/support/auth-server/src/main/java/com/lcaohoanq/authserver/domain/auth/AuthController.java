@@ -8,6 +8,7 @@ import com.lcaohoanq.commonlibrary.dto.LoginRequest;
 import com.lcaohoanq.commonlibrary.dto.LoginResponse;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
 import com.lcaohoanq.commonlibrary.dto.RefreshTokenRequest;
+import com.lcaohoanq.commonlibrary.dto.ResetPasswordRequest;
 import com.lcaohoanq.commonlibrary.enums.Role;
 import com.lcaohoanq.commonlibrary.exceptions.AccountResourceException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,8 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final TokenService tokenService;
-    private final UserFeign userFeign;
 
     /**
      * Login endpoint - authenticates user and returns JWT tokens
@@ -39,11 +38,12 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<MyApiResponse<LoginResponse>> login(
-        @Valid @RequestBody LoginRequest loginRequest
+        @Valid @RequestBody LoginRequest loginRequest,
+        HttpServletRequest request
     ) {
         try {
             log.info("Login attempt for user: {}", loginRequest.getUsername());
-            LoginResponse response = authService.login(loginRequest);
+            LoginResponse response = authService.login(loginRequest, request);
             return MyApiResponse.success(response);
         } catch (Exception e) {
             log.error("Login failed for user: {}", loginRequest.getUsername(), e);
@@ -144,6 +144,40 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Unexpected error during account activation for key: {}", key, e);
             return MyApiResponse.badRequest("Account activation failed: Invalid or expired activation key");
+        }
+    }
+
+
+    @PostMapping("/reset-password/init")
+    public ResponseEntity<MyApiResponse<String>> requestPasswordReset(@RequestParam("email") String email) {
+        try{
+            authService.requestPasswordReset(email);
+            return MyApiResponse.success();
+        }catch(Exception e){
+            return MyApiResponse.badRequest("Failed to process password reset request: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/reset-password/verify")
+    public ResponseEntity<MyApiResponse<String>> verifyResetKey(@RequestParam("key") String key) {
+        try{
+            authService.verifyResetKey(key);
+            return MyApiResponse.success("Password reset key is valid");
+        }catch(AccountResourceException e){
+            return MyApiResponse.badRequest("Invalid or expired password reset key: " + e.getMessage());
+        }catch(Exception e){
+            return MyApiResponse.badRequest("Failed to verify password reset key: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password/finish")
+    public ResponseEntity<MyApiResponse<String>> finishPasswordReset(
+        @RequestBody @Valid ResetPasswordRequest request){
+        try{
+            authService.finishPasswordReset(request);
+            return MyApiResponse.success("Password has been reset successfully");
+        } catch (Exception e){
+            return MyApiResponse.badRequest("Failed to reset password: " + e.getMessage());
         }
     }
 

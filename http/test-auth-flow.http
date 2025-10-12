@@ -58,7 +58,7 @@ POST {{gateway-url}}/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "admin",
+  "username": "lcaohoanq",
   "password": "password123"
 }
 
