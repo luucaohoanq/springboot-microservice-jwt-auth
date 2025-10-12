@@ -2,30 +2,11 @@ spring:
   application:
     name: product-service
 
-  cloud:
-    discovery:
-      enabled: true
-
   profiles:
-    active: test
+#    active: test
+    active: configserver
+#    active: 'configserver-repo'
 
 server:
   port: 4006
-
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
-  api-docs:
-    path: /v3/api-docs
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
 

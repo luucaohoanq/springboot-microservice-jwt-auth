@@ -35,13 +35,13 @@ public class User {
 
     private String password;
 
-    @Size(max = 20)
-    @Column(name = "activation_key")
+    private boolean activated = false;
+
+    @Column(name = "activation_key", length = 50)
     @JsonIgnore
     private String activationKey;
 
-    @Size(max = 20)
-    @Column(name = "reset_key")
+    @Column(name = "reset_key", length = 50)
     @JsonIgnore
     private String resetKey;
 
@@ -54,6 +54,7 @@ public class User {
 
     public static UserResponse toResponse(User user) {
         return new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
+                                user.isActivated(),
                                 user.getRole().name(),
                                 user.getActivationKey(), user.getResetKey(), user.getLangKey());
     }

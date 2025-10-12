@@ -51,6 +51,7 @@ public class WebSecurityConfig {
                         String.format("%s/auth/login", apiPrefix),
                         String.format("%s/auth/logout", apiPrefix),
                         String.format("%s/auth/validate", apiPrefix),
+                        String.format("%s/auth/activate", apiPrefix),
                         String.format("%s/auth/refresh", apiPrefix),
                         String.format("%s/auth/register", apiPrefix),
                         String.format("%s/public/**", apiPrefix))

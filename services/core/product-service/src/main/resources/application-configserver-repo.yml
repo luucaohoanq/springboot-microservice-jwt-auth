@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: product-service
+  #  profiles:
+  #    active: native
+  config:
+    import: optional:configserver:http://localhost:8888
+    name: ${spring.application.name}
+    activate:
+      on-profile: configserver-repo
+
+  cloud:
+    bus:
+      enabled: true
+      trace:
+        enabled: true
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "refresh,busrefresh,health,info"
+
+# Disable p6spy datasource decorator during runtime remote refresh to avoid
+# ConfigurationPropertiesRebinder trying to rebind a wrapped DataSource type.
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false

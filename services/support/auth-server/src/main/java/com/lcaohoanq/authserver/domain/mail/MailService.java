@@ -110,4 +110,9 @@ public class MailService {
     LOG.debug("Sending password reset email to '{}'", user.email());
     sendEmailFromTemplate(user, "mail/passwordResetEmail", "email.reset.title");
   }
+
+  public void sendWelcomeMail(UserResponse user) {
+    LOG.debug("Sending welcome email to '{}'", user.email());
+    sendEmailFromTemplate(user, "mail/welcome", "email.activation.title");
+  }
 }

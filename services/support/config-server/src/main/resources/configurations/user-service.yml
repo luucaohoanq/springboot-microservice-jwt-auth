@@ -1,3 +1,6 @@
+server:
+  port: 4007
+
 spring:
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
@@ -7,7 +10,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-#    show-sql: true
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
@@ -23,12 +26,3 @@ decorator:
   datasource:
     p6spy:
       enable-logging: true
-
-# Scalar Config
-# Ref: https://guides.scalar.com/scalar/scalar-api-references/integrations/spring-boot
-scalar:
-  enabled: true
-
-  #  https://registry.scalar.com/@scalar/apis/galaxy/latest?format=json
-  url: https://cdn.jsdelivr.net/npm/@scalar/galaxy/dist/latest.json
-  path: /scalar

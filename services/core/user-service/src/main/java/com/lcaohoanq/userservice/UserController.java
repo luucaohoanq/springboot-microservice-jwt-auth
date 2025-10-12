@@ -4,13 +4,16 @@ import com.lcaohoanq.commonlibrary.annotations.RequireRole;
 import com.lcaohoanq.commonlibrary.apis.MyApiResponse;
 import com.lcaohoanq.commonlibrary.dto.AuthenticationRequest;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
+import com.lcaohoanq.commonlibrary.dto.ResetPasswordRequest;
 import com.lcaohoanq.commonlibrary.dto.ServiceResponse;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
+import com.lcaohoanq.commonlibrary.enums.LangKey;
 import com.lcaohoanq.commonlibrary.enums.Role;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -75,17 +79,29 @@ public class UserController {
     }
 
     // STAFF role and above - accessible to STAFF, ADMIN
-    @GetMapping
-    public ResponseEntity<MyApiResponse<List<UserResponse>>> getAllUsers(
-        @RequestHeader("X-User-Name") String username,
-        @RequestHeader("X-User-Role") String role
-    ) {
-        log.info("User {} (Role: {}) requesting all users", username, role);
-        
-        if (!hasPermission(role, Role.STAFF)) {
-            return MyApiResponse.forbidden("Access denied: STAFF role required");
-        }
+//    @GetMapping
+//    public ResponseEntity<MyApiResponse<List<UserResponse>>> getAllUsers(
+//        @RequestHeader("X-User-Name") String username,
+//        @RequestHeader("X-User-Role") String role
+//    ) {
+//        log.info("User {} (Role: {}) requesting all users", username, role);
+//
+//        if (!hasPermission(role, Role.STAFF)) {
+//            return MyApiResponse.forbidden("Access denied: STAFF role required");
+//        }
+//
+//        return MyApiResponse.success(
+//            userRepository.findAll().stream()
+//                .map(User::toResponse)
+//                .toList()
+//        );
+//    }
 
+    // ADMIN only - accessible to ADMIN only
+    @GetMapping
+    @RequireRole(Role.ADMIN)
+    public ResponseEntity<MyApiResponse<List<UserResponse>>> getAllUsers(
+    ) {
         return MyApiResponse.success(
             userRepository.findAll().stream()
                 .map(User::toResponse)
@@ -94,22 +110,22 @@ public class UserController {
     }
 
     // ADMIN only - accessible to ADMIN only
-    @GetMapping("/admin/stats")
-    public ResponseEntity<MyApiResponse<String>> getAdminStats(
-        @RequestHeader("X-User-Name") String username,
-        @RequestHeader("X-User-Role") String role
-    ) {
-        log.info("User {} (Role: {}) requesting admin stats", username, role);
-        
-        if (!hasPermission(role, Role.ADMIN)) {
-            return MyApiResponse.forbidden("Access denied: ADMIN role required");
-        }
-
-        long userCount = userRepository.count();
-        String stats = String.format("Total users: %d, Admin access granted to: %s", userCount, username);
-        
-        return MyApiResponse.success(stats);
-    }
+//    @GetMapping("/admin/stats")
+//    public ResponseEntity<MyApiResponse<String>> getAdminStats(
+//        @RequestHeader("X-User-Name") String username,
+//        @RequestHeader("X-User-Role") String role
+//    ) {
+//        log.info("User {} (Role: {}) requesting admin stats", username, role);
+//
+//        if (!hasPermission(role, Role.ADMIN)) {
+//            return MyApiResponse.forbidden("Access denied: ADMIN role required");
+//        }
+//
+//        long userCount = userRepository.count();
+//        String stats = String.format("Total users: %d, Admin access granted to: %s", userCount, username);
+//
+//        return MyApiResponse.success(stats);
+//    }
 
     // ADMIN only - accessible to ADMIN only
     @GetMapping("/admin/stats-v2")
@@ -189,6 +205,9 @@ public class UserController {
                 .email(registerRequest.getEmail())
                 .username(registerRequest.getUsername())
                 .password(registerRequest.getPassword()) // This will be already encrypted by auth-service
+                .activationKey(UUID.randomUUID().toString())
+                .langKey(LangKey.EN.getKey())
+                .activated(false)
                 .role(Role.USER)
                 .build();
             var savedUser = userRepository.save(newUser);
@@ -213,6 +232,9 @@ public class UserController {
                 .email(registerRequest.getEmail())
                 .username(registerRequest.getUsername())
                 .password(registerRequest.getPassword())
+                .activationKey(UUID.randomUUID().toString())
+                .resetKey(UUID.randomUUID().toString())
+                .activated(false)
                 .role(Role.USER)
                 .build();
             var savedUser = userRepository.save(newUser);
@@ -221,6 +243,74 @@ public class UserController {
             log.error("Failed to create user: {}", e.getMessage());
             return MyApiResponse.badRequest("Failed to create user: " + e.getMessage());
         }
+    }
+
+    // Send activation email for user after registration
+    @GetMapping("/activate-registration")
+    public ResponseEntity<Void> activateUser(@RequestParam String key) {
+        try {
+            var user = userRepository.findOneByActivationKeyAndActivatedIsFalse(key)
+                .map(u -> {
+                    u.setActivated(true);
+                    u.setActivationKey(null);
+                    return u;
+                })
+                .orElseThrow(() -> new Exception("Invalid activation key"));
+            userRepository.save(user);
+            return ResponseEntity.noContent().build(); // ✅ 204 without body
+        } catch (Exception e) {
+            return ResponseEntity
+                .badRequest()
+                .body(null); // hoặc dùng ResponseEntity.status(400).build()
+        }
+    }
+
+    // 3 API Endpoint for password reset process
+    @PostMapping("/reset-password/init")
+    public ResponseEntity<Void> requestPasswordReset(@RequestParam String email) {
+        userRepository.findByEmail(email)
+            .ifPresent(user -> {
+                user.setResetKey(UUID.randomUUID().toString());
+                userRepository.save(user);
+            });
+        // Always return 204 to prevent email enumeration
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/reset-password/verify")
+    public ResponseEntity<Void> verifyResetKey(@RequestParam String key) {
+        boolean exists = userRepository.findOneByResetKey(key).isPresent();
+        if(exists) {
+            return ResponseEntity.noContent().build();
+        }else{
+            log.warn("Invalid reset key attempt: {}", key);
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    @PostMapping("/reset-password/finish")
+    public ResponseEntity<Void> finishPasswordReset(
+        @Valid @RequestBody ResetPasswordRequest request) {
+        var userOpt = userRepository.findOneByResetKeyAndEmail(request.key(), request.email());
+        if (userOpt.isEmpty()) {
+            log.warn("Password reset attempt with invalid key: {}", request.key());
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        var password = request.newPassword();
+        var confirmPassword = request.confirmNewPassword();
+
+        if (!password.equals(confirmPassword)) {
+            log.warn("Password and confirmation do not match for reset key: {}", request.key());
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        var user = userOpt.get();
+        user.setPassword(passwordEncoder.encode(password));
+        user.setResetKey(null); // clear the key after use
+        userRepository.save(user);
+
+        return ResponseEntity.noContent().build();
     }
 
     // Helper method to check role permissions

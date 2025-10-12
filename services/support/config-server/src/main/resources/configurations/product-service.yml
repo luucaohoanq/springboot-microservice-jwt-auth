@@ -3,10 +3,10 @@ spring:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
     driver-class-name: org.h2.Driver
     username: sa
-    password: password
+    password: password1231231
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
 #    show-sql: true
     properties:
       hibernate:
@@ -18,6 +18,14 @@ spring:
   jackson:
     date-format: dd/MM/yyyy HH:mm:ss
     time-zone: Asia/Ho_Chi_Minh
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
 
 decorator:
   datasource:
@@ -31,4 +39,8 @@ scalar:
 
   #  https://registry.scalar.com/@scalar/apis/galaxy/latest?format=json
   url: https://cdn.jsdelivr.net/npm/@scalar/galaxy/dist/latest.json
-  path: /scalar
+  path: /scalar-v2
+  theme: moon
+
+app:
+  welcome: "Updated Hello !"

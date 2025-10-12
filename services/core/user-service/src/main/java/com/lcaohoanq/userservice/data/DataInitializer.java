@@ -1,5 +1,6 @@
 package com.lcaohoanq.userservice.data;
 
+import com.lcaohoanq.commonlibrary.enums.LangKey;
 import com.lcaohoanq.commonlibrary.enums.Role;
 import com.lcaohoanq.userservice.User;
 import com.lcaohoanq.userservice.UserRepository;
@@ -27,9 +28,9 @@ public class DataInitializer {
             adminUser.setUsername("admin");
             adminUser.setEmail("admin@example.com");
             adminUser.setPassword(defaultPassword);
-            adminUser.setActivationKey(UUID.randomUUID().toString().substring(0, 20));
-            adminUser.setResetKey(UUID.randomUUID().toString().substring(0, 20));
-            adminUser.setLangKey("en");
+            adminUser.setActivationKey(UUID.randomUUID().toString());
+            adminUser.setActivated(true);
+            adminUser.setLangKey(LangKey.EN.getKey());
             adminUser.setRole(Role.ADMIN);
             userRepository.save(adminUser);
 
@@ -37,9 +38,8 @@ public class DataInitializer {
             staffUser.setUsername("staff");
             staffUser.setEmail("staff@example.com");
             staffUser.setPassword(defaultPassword);
-            staffUser.setActivationKey(UUID.randomUUID().toString().substring(0, 20));
-            staffUser.setResetKey(UUID.randomUUID().toString().substring(0, 20));
-            staffUser.setLangKey("en");
+            staffUser.setActivationKey(UUID.randomUUID().toString());
+            staffUser.setLangKey(LangKey.EN.getKey());
             staffUser.setRole(Role.STAFF);
             userRepository.save(staffUser);
 
@@ -47,9 +47,8 @@ public class DataInitializer {
             regularUser.setUsername("user");
             regularUser.setEmail("user@example.com");
             regularUser.setPassword(defaultPassword);
-            regularUser.setActivationKey(UUID.randomUUID().toString().substring(0, 20));
-            regularUser.setResetKey(UUID.randomUUID().toString().substring(0, 20));
-            regularUser.setLangKey("en");
+            regularUser.setActivationKey(UUID.randomUUID().toString());
+            regularUser.setLangKey(LangKey.EN.getKey());
             regularUser.setRole(Role.USER);
             userRepository.save(regularUser);
 

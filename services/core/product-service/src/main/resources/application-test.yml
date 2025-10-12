@@ -19,6 +19,23 @@ spring:
     date-format: dd/MM/yyyy HH:mm:ss
     time-zone: Asia/Ho_Chi_Minh
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
 decorator:
   datasource:
     p6spy:
