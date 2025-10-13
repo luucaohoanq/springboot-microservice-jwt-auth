@@ -61,30 +61,35 @@
   - product-service: load the product-service.yml file from native (local file) or git repo
   - configserver: profile's name of product-service.yml where ref from the product service directory
 
-3. “Không cần restart” là nhờ Spring Cloud Bus
+- “Không cần restart” là nhờ Spring Cloud Bus
 
 Đây mới là phần thần kỳ 🪄
 
-spring-cloud-bus + spring-cloud-starter-actuator
-cho phép broadcast sự kiện refresh config tới toàn bộ các service đang chạy.
+- **spring-cloud-bus + spring-cloud-starter-actuator**
+- cho phép broadcast sự kiện refresh config tới toàn bộ các service đang chạy.
 
-Cụ thể:
+Cụ thể, bạn gửi lệnh:
 
-Bạn gửi lệnh:
-
+```bash
 curl -X POST http://config-server:8888/actuator/busrefresh
+```
 
+- Config Server publish một event (message) qua RabbitMQ.
 
-Config Server publish một event (message) qua RabbitMQ.
+- Tất cả microservice client đang kết nối bus đều nhận event đó.
 
-Tất cả microservice client đang kết nối bus đều nhận event đó.
+- Mỗi client tự động gọi /actuator/refresh nội bộ, reload lại các config trong Environment mà không restart JVM.
 
-Mỗi client tự động gọi /actuator/refresh nội bộ,
-reload lại các config trong Environment mà không restart JVM.
+- Các bean có annotation sẽ được tạo lại (re-initialize) với giá trị mới.
 
-Các bean có annotation:
-
+```java
 @RefreshScope
+```
 
+# Spring Sleuth + ZipKin
 
-sẽ được tạo lại (re-initialize) với giá trị mới.
+# Junit (Unit Test + Integration Test)
+
+# JMeter
+
+# IP Tracking
