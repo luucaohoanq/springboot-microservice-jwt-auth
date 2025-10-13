@@ -6,10 +6,12 @@ import com.lcaohoanq.commonlibrary.dto.AuthenticationRequest;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
 import com.lcaohoanq.commonlibrary.dto.ResetPasswordRequest;
 import com.lcaohoanq.commonlibrary.dto.ServiceResponse;
+import com.lcaohoanq.commonlibrary.dto.UpdateUserRequest;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
 import com.lcaohoanq.commonlibrary.enums.LangKey;
 import com.lcaohoanq.commonlibrary.enums.Role;
 import jakarta.validation.Valid;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,8 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -220,13 +224,10 @@ public class UserController {
 
     // Admin-only user creation endpoint
     @PostMapping("/create")
+    @RequireRole(Role.ADMIN)
     public ResponseEntity<MyApiResponse<UserResponse>> createUser(
-        @RequestHeader("X-User-Role") String role,
         @Valid @RequestBody RegisterRequest registerRequest
     ) {
-        if (!hasPermission(role, Role.ADMIN)) {
-            return MyApiResponse.forbidden("Access denied: ADMIN role required to create users");
-        }
         try {
             var newUser = User.builder()
                 .email(registerRequest.getEmail())
@@ -313,7 +314,36 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // Helper method to check role permissions
+    @PutMapping("/internal/{id}")
+    public ResponseEntity<ServiceResponse<UserResponse>> updateUserInternal(
+        @PathVariable Long id,
+        @Valid @RequestBody UpdateUserRequest request)
+    {
+        try {
+            var user = userRepository.findById(id)
+                .orElseThrow(() -> new Exception("User not found"));
+
+            if (request.email() != null && !request.email().isBlank()) {
+                user.setEmail(request.email());
+            }
+            if (request.username() != null && !request.username().isBlank()) {
+                user.setUsername(request.username());
+            }
+            if (request.langKey() != null && !request.langKey().isBlank()) {
+                user.setLangKey(request.langKey());
+            }
+            if (request.lastLoginAttempt() != null){
+                user.setLastLoginAttempt(request.lastLoginAttempt());
+            }
+            var updatedUser = userRepository.save(user);
+            return ResponseEntity.ok(ServiceResponse.success(User.toResponse(updatedUser)));
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(ServiceResponse.notFound(e.getMessage()));
+        }
+
+    }
+
+        // Helper method to check role permissions
     private boolean hasPermission(String userRole, Role requiredRole) {
         try {
             Role currentRole = Role.valueOf(userRole);

@@ -169,6 +169,12 @@ public sealed interface MyApiResponse<T> permits Error, Success, ValidationError
         .body(new Error<>(status.value(), message, reason, getCurrentPath(), Instant.now()));
   }
 
+  static <T> ResponseEntity<MyApiResponse<T>> error(
+      HttpStatus status, String message){
+    return ResponseEntity.status(status)
+        .body(new Error<>(status.value(), message, "", getCurrentPath(), Instant.now()));
+  }
+
   // ✅ Overloaded methods for explicit path specification
   static <T> ResponseEntity<MyApiResponse<T>> badRequest(String reason, String path) {
     return ResponseEntity.badRequest()

@@ -41,14 +41,9 @@ public class AuthController {
         @Valid @RequestBody LoginRequest loginRequest,
         HttpServletRequest request
     ) {
-        try {
-            log.info("Login attempt for user: {}", loginRequest.getUsername());
-            LoginResponse response = authService.login(loginRequest, request);
-            return MyApiResponse.success(response);
-        } catch (Exception e) {
-            log.error("Login failed for user: {}", loginRequest.getUsername(), e);
-            return MyApiResponse.unauthorized("Invalid credentials");
-        }
+        log.info("Login attempt for user: {}", loginRequest.getUsername());
+        LoginResponse response = authService.login(loginRequest, request);
+        return MyApiResponse.success(response);
     }
 
     /**

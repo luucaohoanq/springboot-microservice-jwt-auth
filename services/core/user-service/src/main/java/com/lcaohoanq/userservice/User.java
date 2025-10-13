@@ -12,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
+import java.time.ZonedDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -49,6 +50,8 @@ public class User {
     @Column(name = "lang_key")
     private String langKey;
 
+    private ZonedDateTime lastLoginAttempt;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -56,6 +59,7 @@ public class User {
         return new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
                                 user.isActivated(),
                                 user.getRole().name(),
-                                user.getActivationKey(), user.getResetKey(), user.getLangKey());
+                                user.getActivationKey(), user.getResetKey(), user.getLangKey(),
+                                user.getLastLoginAttempt());
     }
 }

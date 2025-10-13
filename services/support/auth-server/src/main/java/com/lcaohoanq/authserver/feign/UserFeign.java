@@ -5,13 +5,16 @@ import com.lcaohoanq.commonlibrary.dto.AuthenticationRequest;
 import com.lcaohoanq.commonlibrary.dto.RegisterRequest;
 import com.lcaohoanq.commonlibrary.dto.ResetPasswordRequest;
 import com.lcaohoanq.commonlibrary.dto.ServiceResponse;
+import com.lcaohoanq.commonlibrary.dto.UpdateUserRequest;
 import com.lcaohoanq.commonlibrary.dto.UserResponse;
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -27,6 +30,12 @@ public interface UserFeign {
     @GetMapping("/api/users/internal/{id}")
     ResponseEntity<ServiceResponse<UserResponse>> getUserById(@PathVariable Long id);
 
+    @PutMapping("/api/users/internal/{id}")
+    ResponseEntity<ServiceResponse<UserResponse>> updateUserInternal(
+        @PathVariable Long id,
+        @Valid @RequestBody UpdateUserRequest request
+    );
+
     @PostMapping("/api/users/authenticate")
     ResponseEntity<ServiceResponse<UserResponse>> authenticateUser(@Valid @RequestBody AuthenticationRequest authRequest);
 
@@ -38,12 +47,12 @@ public interface UserFeign {
 
     // 3 endpoints for reset password
 
-    @PostMapping("/api/reset-password/init")
+    @PostMapping("/api/users/reset-password/init")
     ResponseEntity<Void> requestPasswordReset(@RequestParam String email);
 
-    @GetMapping("/reset-password/verify")
+    @GetMapping("/api/users/reset-password/verify")
     ResponseEntity<Void> verifyResetKey(@RequestParam String key);
 
-    @PostMapping("/reset-password/finish")
+    @PostMapping("/api/users/reset-password/finish")
     ResponseEntity<Void> finishPasswordReset(@Valid @RequestBody ResetPasswordRequest request);
 }

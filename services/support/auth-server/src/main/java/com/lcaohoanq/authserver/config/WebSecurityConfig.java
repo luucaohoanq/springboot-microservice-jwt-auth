@@ -54,6 +54,7 @@ public class WebSecurityConfig {
                         String.format("%s/auth/activate", apiPrefix),
                         String.format("%s/auth/refresh", apiPrefix),
                         String.format("%s/auth/register", apiPrefix),
+                        String.format("%s/auth/reset-password/**", apiPrefix),
                         String.format("%s/public/**", apiPrefix))
                     .permitAll()
 

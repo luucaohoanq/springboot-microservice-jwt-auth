@@ -2,14 +2,9 @@ package com.lcaohoanq.commonlibrary.dto;
 
 import java.time.ZonedDateTime;
 
-public record UserResponse(
-    Long id,
+public record UpdateUserRequest(
     String username,
     String email,
-    boolean activated,
-    String role,
-    String activationKey,
-    String resetKey,
     String langKey,
     ZonedDateTime lastLoginAttempt
 ) {

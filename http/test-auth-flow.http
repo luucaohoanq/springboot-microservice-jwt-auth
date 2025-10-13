@@ -17,7 +17,7 @@
 @user-service-url = http://localhost:4007
 
 # Variables to store tokens (will be set manually after each request)
-@access-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU4iLCJ1c2VySWQiOjEsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6ImFkbWluIiwic3ViIjoiYWRtaW4iLCJleHAiOjE3NjAzNjgyNjZ9.z3HeJ6XxHKz1VFh5M4gV07ovSdNmA0BIhtQxYGVIjZA
+@access-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU4iLCJ1c2VySWQiOjEsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6ImFkbWluIiwic3ViIjoiYWRtaW4iLCJleHAiOjE3NjA0MDc2NjN9.zVRHbslzkjzXg2cAGZqgHbErUo3CxHjv36jez20NUvM
 @refresh-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU4iLCJ0b2tlblR5cGUiOiJyZWZyZXNoIiwidXNlcklkIjoxLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwidXNlcm5hbWUiOiJhZG1pbiIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzYwMjUyMTUyfQ.6j_-0Z5IQGPERFaMGxFZOxVmCNPptWwQh-bT3wkxJHs
 
 
@@ -446,3 +446,9 @@ GET {{user-service-url}}/api/users/username/johndoe
 #    - Rate limiting in gateway
 #    - CORS configuration
 ###
+
+# 3 api reset password
+@email = hoangclw@gmail.com
+@notExistEmail = hoang123@gmail.com
+POST {{gateway-url}}/api/auth/reset-password/init?email={{email}}
+Content-Type: application/json
