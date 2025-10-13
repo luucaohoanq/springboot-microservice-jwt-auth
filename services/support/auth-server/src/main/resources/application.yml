@@ -54,3 +54,13 @@ jwt:
   secretKey: TaqlmGv1iEDMRiFp/pHuID1+T84IABfuA0xXh4GhiUI=
   expiration: 3600 # 1 hour in seconds
   expiration-refresh-token: 86400 # 24 hours in seconds
+
+# Geo location configuration
+geo:
+  api:
+    base-url: https://ip-api.com
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true

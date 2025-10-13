@@ -38,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
+    private final LoginHistoryService loginHistoryService;
 
     @Value("${jwt.expiration}")
     private long expiration; // in seconds
@@ -59,18 +60,23 @@ public class AuthServiceImpl implements AuthService {
         // 2️⃣ Call user-service authentication endpoint to validate credentials
         log.info("🔐 Calling user-service authenticate endpoint for user: {}", authRequest.getUsername());
 
+        String clientIp = extractClientIp(request);
+
         UserResponse user;
         try {
             var authResponse = userFeign.authenticateUser(authRequest);
             // 3️⃣ Check if authentication was successful
-            if(!authResponse.getStatusCode().is2xxSuccessful()){
-                throw new BadCredentialsException("Invalid credentials");
-            }
             if(authResponse.getBody() == null || !authResponse.getBody().isSuccess()){
                 throw new BadCredentialsException("Invalid credentials");
             }
             user = authResponse.getBody().getData();
             log.info("✅ User {} authenticated successfully", user.username());
+            loginHistoryService.recordLogin(
+                user.id(),
+                clientIp,
+                request.getHeader("User-Agent"),
+                true
+            );
         } catch(FeignException e){
             log.error("❌ Error during authentication call to user-service: {}", e.getMessage());
             throw new BadCredentialsException("Invalid credentials");
@@ -350,6 +356,15 @@ public class AuthServiceImpl implements AuthService {
             return false;
         }
         return userAgent.toLowerCase().contains("mobile");
+    }
+
+    public String extractClientIp(HttpServletRequest request) {
+        String header = request.getHeader("X-Forwarded-For");
+        if (header != null && !header.isEmpty()) {
+            // If there are multiple IPs, the first one is the client IP
+            return header.split(",")[0];
+        }
+        return request.getRemoteAddr();
     }
 
 }

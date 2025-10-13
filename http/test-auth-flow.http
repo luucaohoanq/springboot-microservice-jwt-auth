@@ -17,7 +17,7 @@
 @user-service-url = http://localhost:4007
 
 # Variables to store tokens (will be set manually after each request)
-@access-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU4iLCJ1c2VySWQiOjEsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6ImFkbWluIiwic3ViIjoiYWRtaW4iLCJleHAiOjE3NjA0MDc2NjN9.zVRHbslzkjzXg2cAGZqgHbErUo3CxHjv36jez20NUvM
+@access-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU4iLCJ1c2VySWQiOjEsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6ImFkbWluIiwic3ViIjoiYWRtaW4iLCJleHAiOjE3NjA0MTYxNjN9.dEivfNrpvgqn14Tg4qhzbmKGVisPNYUxpD9vxxW-_-s
 @refresh-token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU4iLCJ0b2tlblR5cGUiOiJyZWZyZXNoIiwidXNlcklkIjoxLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwidXNlcm5hbWUiOiJhZG1pbiIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzYwMjUyMTUyfQ.6j_-0Z5IQGPERFaMGxFZOxVmCNPptWwQh-bT3wkxJHs
 
 
@@ -26,6 +26,13 @@
 GET {{gateway-url}}/api/users
 Authorization: Bearer {{access-token}}
 Content-Type: application/json
+
+###
+# 0.1. ADMIN GET ALL HISTORY
+GET {{gateway-url}}/api/auth/login-history
+Authorization: Bearer {{access-token}}
+Content-Type: application/json
+
 
 ###
 # 1. USER REGISTRATION
@@ -58,7 +65,7 @@ POST {{gateway-url}}/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "lcaohoanq",
+  "username": "admin",
   "password": "password123"
 }
 

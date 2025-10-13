@@ -76,7 +76,14 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicPath(String path) {
-        return path.startsWith("/api/auth/") || 
+        // Public auth endpoints that don't require authentication
+        return path.equals("/api/auth/login") ||
+               path.equals("/api/auth/register") ||
+               path.equals("/api/auth/refresh") ||
+               path.equals("/api/auth/validate") ||
+               path.equals("/api/auth/activate") ||
+               path.startsWith("/api/auth/reset-password/") ||
+               // Other public paths
                path.startsWith("/actuator/") ||
                path.startsWith("/swagger-ui/") ||
                path.startsWith("/v3/api-docs/") ||

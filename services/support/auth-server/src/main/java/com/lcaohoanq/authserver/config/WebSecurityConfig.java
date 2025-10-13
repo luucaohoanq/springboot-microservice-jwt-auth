@@ -1,5 +1,6 @@
 package com.lcaohoanq.authserver.config;
 
+import com.lcaohoanq.authserver.filter.JwtAuthenticationFilter;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,6 +29,7 @@ public class WebSecurityConfig {
 
   private final AuthenticationEntryPoint authenticationEntryPoint;
   private final AccessDeniedHandler accessDeniedHandler;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   @Value("${api.prefix}")
   private String apiPrefix;
@@ -78,7 +81,9 @@ public class WebSecurityConfig {
 
                     // All other endpoints require authentication
                     .anyRequest()
-                    .authenticated());
+                    .authenticated())
+        // Add JWT authentication filter before the standard authentication filter
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 
     return http.build();

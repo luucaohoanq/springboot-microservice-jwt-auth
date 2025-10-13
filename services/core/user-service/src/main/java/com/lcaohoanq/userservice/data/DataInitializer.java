@@ -40,12 +40,13 @@ public class DataInitializer {
             staffUser.setPassword(defaultPassword);
             staffUser.setActivationKey(UUID.randomUUID().toString());
             staffUser.setLangKey(LangKey.EN.getKey());
+            staffUser.setActivated(true);
             staffUser.setRole(Role.STAFF);
             userRepository.save(staffUser);
 
             User regularUser = new User();
-            regularUser.setUsername("user");
-            regularUser.setEmail("user@example.com");
+            regularUser.setUsername("hoang");
+            regularUser.setEmail("hoangdz1604@gmail.com");
             regularUser.setPassword(defaultPassword);
             regularUser.setActivationKey(UUID.randomUUID().toString());
             regularUser.setLangKey(LangKey.EN.getKey());
