@@ -1,0 +1,3 @@
+- https://github.com/Infisical/infisical
+- Start: https://infisical.com/docs/self-hosting/deployment-options/docker-compose
+- Env: https://infisical.com/docs/self-hosting/configuration/envars
